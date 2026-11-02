@@ -156,7 +156,15 @@ void AGASPCharacter::BeginPlay()
 
 	OverlayContainerChanged.AddDynamic(this, &ThisClass::OnOverlayModeChanged);
 	PoseModeChanged.AddDynamic(this, &ThisClass::OnPoseModeChanged);
-	
+
+	// EMBERS: an overlay set before the binding above (on clients, replicated before BeginPlay; OnRep_OverlayMode
+	// broadcast to nobody) was never linked, and nothing re-applies it later. Link it once now, as SetPoseMode does
+	// for PoseMode below. Nothing can be linked yet at this point, and AddOverrideLayer ignores an active tag anyway.
+	if (!OverlayTagContainer.IsEmpty())
+	{
+		OnOverlayModeChanged(FGameplayTagContainer(), OverlayTagContainer);
+	}
+
 	MoverInputs_PreSim.OrientationIntent = GetActorForwardVector();
 
 	ON_SCOPE_EXIT
